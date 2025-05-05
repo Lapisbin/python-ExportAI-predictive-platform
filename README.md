@@ -1,16 +1,8 @@
 # ExportAI: 수출 대응형 예측 플랫폼 📦📊
 
 **Repository Name:** `python-ExportAI-predictive-platform`  
-## 🛠 기술 스택
-
-| 분야           | 사용 기술                                       |
-|----------------|------------------------------------------------|
-| 프로그래밍 언어 | Python                                          |
-| 모델링         | XGBoost, LSTM, Scikit-learn                     |
-| 전처리         | Pandas, Numpy, BeautifulSoup, re               |
-| 감성 분석      | BERT (KoBERT), Transformers                     |
-| 시각화         | Matplotlib, Seaborn, Plotly (예정)             |
-**📘 Notion:** [프로젝트 노션 페이지 바로가기](https://www.notion.so/DSBA-1e8671bafae780f68b3fedea2bf10f45)
+**Tech Stack:** Python, XGBoost, LSTM, Pandas, Scikit-learn, BERT, BeautifulSoup
+<br>**📘 Notion:** [프로젝트 노션 페이지 바로가기](https://www.notion.so/DSBA-1e8671bafae780f68b3fedea2bf10f45)
 
 ## 📌 프로젝트 개요
 
