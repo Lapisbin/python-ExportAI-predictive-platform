@@ -56,7 +56,7 @@
 |-----------|------|
 | [AOTWNetZ](https://github.com/AOTWNetZ) | 뉴스 키워드 크롤링 및 전처리 |
 | [Kimhyun13in](https://github.com/Kimhyun13in) | 뉴스 키워드 크롤링 및 전처리 |
-| [junkyu-kang](https://github.com/junkyu-kang) | 데이터셋 종합 |
+| [jade-kang](https://github.com/jade-kang) | 데이터셋 종합 |
 | [Lapisbin](https://github.com/Lapisbin) | XGBoost, LSTM 모델 구성 |
 
 
