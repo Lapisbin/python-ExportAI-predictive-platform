@@ -11,8 +11,7 @@ def load_and_preprocess_data(file_path, sequence_length=12):
     df = pd.read_csv(file_path)
     
     # 특성과 타겟 분리
-    features = ['원달러환율', 'GDP_성장률', '경기선행지수', '금_가격', 
-                '천연가스_가격', '원유_가격', '감성지수', '수출량']
+    features = ['date','gdp_growth','korea_lead','brent_price','exchange_rate','gold_price','gas_price','usa_lead','china_lead','export','export_restored']
     data = df[features].values
     
     # 데이터 정규화
@@ -72,7 +71,7 @@ def predict_future_exports(model, last_sequence, scaler, n_future=6):
 def main():
     # 데이터 로드 및 전처리
     sequence_length = 12  # 12개월의 데이터로 다음 달 예측
-    X, y, scaler, features_df = load_and_preprocess_data('your_data.csv', sequence_length)
+    X, y, scaler, features_df = load_and_preprocess_data('data_integ.csv', sequence_length)
     
     # 학습/검증/테스트 세트 분할
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
