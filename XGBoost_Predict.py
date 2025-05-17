@@ -64,17 +64,20 @@ print("모델 학습 완료")
 # 예측 수행
 y_pred = model.predict(X_test)
 
-# 모델 성능 평가
+# 성능 평가
 mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
+mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
+accuracy_like = 100 - mape  # 백분율 기준의 정확도 느낌
 
 print("\n=== 모델 성능 평가 ===")
 print(f"RMSE: {rmse:,.2f}")
 print(f"MAE: {mae:,.2f}")
 print(f"R2 Score: {r2:.4f}")
-
+print(f"MAPE: {mape:.2f}%")
+print(f"예측 정확도(유사): {accuracy_like:.2f}%") # 모델 간 비교용 예측 정확도
 # 예측 결과를 데이터프레임으로 저장
 results_df = pd.DataFrame({
     'date': test_data.index,
