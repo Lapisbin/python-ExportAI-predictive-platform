@@ -1,0 +1,139 @@
+import pandas as pd
+import numpy as np
+import lightgbm as lgb
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+plt.rcParams['font.family'] = 'Malgun Gothic'
+plt.rcParams['axes.unicode_minus'] = False
+
+# 데이터 로드
+df = pd.read_csv('scaled_df.csv')
+df['date'] = pd.to_datetime(df['date'])
+df.set_index('date', inplace=True)
+
+# Lag 피처 생성 함수
+def create_lag_features(df, columns, lags):
+    for col in columns:
+        for lag in lags:
+            df[f'{col}_lag{lag}'] = df[col].shift(lag)
+    return df
+
+# Lag 피처 생성
+lag_columns = ['export_restored']
+lag_periods = [1, 2, 3, 6, 12]
+all_data = create_lag_features(df.copy(), lag_columns, lag_periods)
+
+# 피처 정의
+base_features = ['gdp_growth', 'exchange_rate', 'gold_price', 'gas_price',
+                 'korea_lead', 'usa_lead', 'china_lead', 'brent_price', 'trade']
+lag_features = [f'export_restored_lag{lag}' for lag in lag_periods]
+feature_columns = base_features + lag_features
+
+# 학습/테스트 데이터 분리
+train_data = all_data.loc[:'2024-12'].copy().dropna()
+test_data = all_data.loc['2025-01':'2025-03'].copy()
+
+X_train = train_data[feature_columns]
+y_train = train_data['export_restored']
+X_test = test_data[feature_columns]
+y_test = test_data['export_restored']
+
+# LightGBM 모델 학습
+model = lgb.LGBMRegressor(
+    n_estimators=1000,
+    learning_rate=0.01,
+    max_depth=5,
+    random_state=42
+)
+
+print("\n=== 모델 학습 시작 ===")
+model.fit(X_train, y_train)
+print("모델 학습 완료")
+
+# 예측 수행
+y_pred = model.predict(X_test)
+
+# 성능 평가
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
+accuracy_like = 100 - mape  # 백분율 기준의 정확도 느낌
+
+print("\n=== 모델 성능 평가 ===")
+print(f"RMSE: {rmse:,.2f}")
+print(f"MAE: {mae:,.2f}")
+print(f"R2 Score: {r2:.4f}")
+print(f"MAPE: {mape:.2f}%")
+print(f"예측 정확도(유사): {accuracy_like:.2f}%") # 모델 간 비교용 예측 정확도
+# 예측 결과 저장 및 오차율 계산
+results_df = pd.DataFrame({
+    'date': test_data.index,
+    '실제 수출액': y_test,
+    '예측 수출액': y_pred,
+})
+results_df['오차율(%)'] = ((results_df['실제 수출액'] - results_df['예측 수출액']) / results_df['실제 수출액']) * 100
+
+# 출력
+print("\n=== 2025년 1-3월 수출액 예측 결과 ===")
+pd.set_option('display.float_format', lambda x: '{:,.0f}'.format(x) if isinstance(x, (int, float)) and not isinstance(x, bool) else str(x))
+print("\n[단위: USD]")
+print("=" * 80)
+for idx, row in results_df.iterrows():
+    print(f"날짜: {idx.strftime('%Y년 %m월')}")
+    print(f"실제 수출액: {row['실제 수출액']:>15,.0f}")
+    print(f"예측 수출액: {row['예측 수출액']:>15,.0f}")
+    print(f"오차율: {row['오차율(%)']:>18.2f}%")
+    print("-" * 80)
+
+print(f"평균 오차율: {results_df['오차율(%)'].mean():>16.2f}%")
+print("=" * 80)
+
+# 시각화
+plt.figure(figsize=(15, 10))
+
+# 1. 실제 vs 예측
+plt.subplot(2, 1, 1)
+plt.plot(results_df['date'], results_df['실제 수출액'], label='실제값', marker='o')
+plt.plot(results_df['date'], results_df['예측 수출액'], label='예측값', marker='s')
+for idx, row in results_df.iterrows():
+    plt.annotate(f'{row["실제 수출액"]:,.0f}', xy=(row.name, row["실제 수출액"]),
+                 xytext=(0, 10), textcoords='offset points', ha='center', va='bottom')
+    plt.annotate(f'{row["예측 수출액"]:,.0f}', xy=(row.name, row["예측 수출액"]),
+                 xytext=(0, -15), textcoords='offset points', ha='center', va='top')
+plt.title('2025년 1-3월 수출액 예측 결과')
+plt.xlabel('날짜')
+plt.ylabel('수출액')
+plt.legend()
+plt.grid(True)
+plt.margins(y=0.2)
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+plt.xticks(rotation=45)
+
+# 2. 오차율
+plt.subplot(2, 1, 2)
+error_percentage = ((results_df['실제 수출액'] - results_df['예측 수출액']) / results_df['실제 수출액']) * 100
+plt.plot(results_df['date'], error_percentage, color='red', marker='o')
+plt.title('예측 오차율 (%)')
+plt.xlabel('날짜')
+plt.ylabel('오차율 (%)')
+plt.grid(True)
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+plt.xticks(rotation=45)
+
+plt.tight_layout()
+
+# 특성 중요도 시각화
+plt.figure(figsize=(10, 6))
+importance_df = pd.DataFrame({
+    '특성': feature_columns,
+    '중요도': model.feature_importances_
+}).sort_values('중요도', ascending=True)
+plt.barh(importance_df['특성'], importance_df['중요도'])
+plt.title('특성 중요도')
+plt.xlabel('중요도')
+plt.show()
