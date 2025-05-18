@@ -11,7 +11,7 @@ plt.rc('font', family='Malgun Gothic')
 plt.rc('axes', unicode_minus=False)
 
 # 데이터 로드
-df = pd.read_csv('scaled_df.csv', parse_dates=['date'])
+df = pd.read_csv('cleaned_outlier_df.csv', parse_dates=['date'])
 df.set_index('date', inplace=True)
 
 # 학습/테스트 분리
