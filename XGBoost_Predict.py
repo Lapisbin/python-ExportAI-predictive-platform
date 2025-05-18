@@ -28,8 +28,12 @@ lag_columns = ['export_restored']  # 수출량의 과거 데이터 사용
 lag_periods = [1, 2, 3, 6, 12]    # 1,2,3,6,12개월 전의 데이터
 all_data = create_lag_features(df.copy(), lag_columns, lag_periods)
 
-# 원래 특성 컬럼 정의
-base_features = ['gdp_growth','exchange_rate','gold_price','gas_price','china_lead','brent_price','trade','pos_ratio_pol']
+# 특성 컬럼 정의
+# 전체 컬럼에서 제외할 컬럼을 정의
+exclude_columns = ['export', 'export_restored']
+
+# 제외한 나머지 컬럼을 base_features로 설정
+base_features = [col for col in df.columns if col not in exclude_columns]
 
 # Lag 피처 컬럼 추가
 lag_features = [f'export_restored_lag{lag}' for lag in lag_periods]
