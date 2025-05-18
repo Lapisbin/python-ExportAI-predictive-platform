@@ -85,9 +85,10 @@ scale_lookup = combined_data['export'].values[6 + test_start_seq_idx:]
 mean_export = df['export_restored'].mean()
 std_export = df['export_restored'].std()
 
-# 역정규화 (표준 정규화 기준)
+# 역정규화: 예측값만 역정규화
 y_pred = y_pred_scaled * std_export + mean_export
-y_true = y_test * std_export + mean_export
+y_true = combined_data['export_restored'].values[6 + test_start_seq_idx:] # 실제값은 export_restored에서 직접 가져오기
+# y_true = y_test * std_export + mean_export // 기존 y_true 정확도 98퍼정도 나옴 다만만 수출량이 실제와 좀 다름
 
 # 결과 데이터프레임
 results_df = pd.DataFrame({
