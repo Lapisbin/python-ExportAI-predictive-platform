@@ -8,7 +8,7 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 # 데이터 로드
-df = pd.read_csv('scaled_df.csv')
+df = pd.read_csv('no_outlier_ratio_pol_df.csv')
 df['date'] = pd.to_datetime(df['date'])
 df.set_index('date', inplace=True)
 
@@ -25,8 +25,7 @@ lag_periods = [1, 2, 3, 6, 12]
 all_data = create_lag_features(df.copy(), lag_columns, lag_periods)
 
 # 피처 정의
-base_features = ['gdp_growth', 'exchange_rate', 'gold_price', 'gas_price',
-                 'korea_lead', 'usa_lead', 'china_lead', 'brent_price', 'trade']
+base_features = ['gdp_growth','exchange_rate','gold_price','gas_price','china_lead','brent_price','trade','pos_ratio_pol']
 lag_features = [f'export_restored_lag{lag}' for lag in lag_periods]
 feature_columns = base_features + lag_features
 
