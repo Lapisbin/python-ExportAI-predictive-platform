@@ -6,12 +6,13 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
+from scipy.stats import pearsonr, spearmanr
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 # 데이터 로드
-df = pd.read_csv('no_outlier_ratio_pol_df.csv')
+df = pd.read_csv('feat_imp_df.csv')
 df['date'] = pd.to_datetime(df['date'])
 df.set_index('date', inplace=True)
 
@@ -111,12 +112,19 @@ r2 = r2_score(y_true, y_pred)
 mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 accuracy_like = 100 - mape
 
+# 추세 유사성
+pearson_corr, _ = pearsonr(y_true, y_pred)
+spearman_corr, _ = spearmanr(y_true, y_pred)
+
+
 print("\n=== 모델 성능 평가 ===")
 print(f"RMSE: {rmse:,.2f}")
 print(f"MAE: {mae:,.2f}")
 print(f"R2 Score: {r2:.4f}")
 print(f"MAPE: {mape:.2f}%")
 print(f"예측 정확도(유사): {accuracy_like:.2f}%")
+print(f"📈 Pearson 상관계수: {pearson_corr:.4f}")
+print(f"📈 Spearman 상관계수: {spearman_corr:.4f}")
 
 # 예측 출력
 print("\n=== 2025년 1-3월 수출액 예측 결과 (LSTM) ===")
@@ -164,6 +172,19 @@ plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
 plt.xticks(rotation=45)
 plt.tight_layout()
+plt.show()
+
+# 이동평균으로 추세선 시각화
+results_df['실제_이동평균'] = results_df['실제 수출액'].rolling(window=2).mean()
+results_df['예측_이동평균'] = results_df['예측 수출액'].rolling(window=2).mean()
+
+plt.figure(figsize=(10, 6))
+plt.plot(results_df.index, results_df['실제_이동평균'], label='실제 추세선', linestyle='--')
+plt.plot(results_df.index, results_df['예측_이동평균'], label='예측 추세선', linestyle='--')
+plt.legend()
+plt.title('예측 vs 실제 수출액 추세선 (이동평균 기반)')
+plt.grid(True)
+plt.xticks(rotation=45)
 plt.show()
 
 # 학습 손실 시각화
