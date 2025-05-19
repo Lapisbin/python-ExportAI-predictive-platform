@@ -122,12 +122,14 @@ results_df['실제_이동평균'] = results_df['실제 수출액'].rolling(windo
 results_df['예측_이동평균'] = results_df['예측 수출액'].rolling(window=2).mean()
 
 plt.figure(figsize=(10, 6))
-plt.plot(results_df.index, results_df['실제_이동평균'], label='실제 추세선', linestyle='--')
-plt.plot(results_df.index, results_df['예측_이동평균'], label='예측 추세선', linestyle='--')
+plt.plot(results_df['date'], results_df['실제_이동평균'], label='실제 추세선', linestyle='--')
+plt.plot(results_df['date'], results_df['예측_이동평균'], label='예측 추세선', linestyle='--')
 plt.legend()
 plt.title('예측 vs 실제 수출액 추세선 (이동평균 기반)')
 plt.grid(True)
 plt.xticks(rotation=45)
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))  # 월 단위 눈금
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # 날짜 포맷
 
 print(results.summary().tables[1])
 
