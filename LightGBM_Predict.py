@@ -9,12 +9,12 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 # 데이터 로드
-df = pd.read_csv('feat_imp_df.csv')
+df = pd.read_csv('feat_imp_news_df.csv')
 df['date'] = pd.to_datetime(df['date'])
 df.set_index('date', inplace=True)
 
 # Lag 피처 생성 함수
-def create_lag_features(df, columns, lags):
+def create_lag_features(df, columns, lags):    
     for col in columns:
         for lag in lags:
             df[f'{col}_lag{lag}'] = df[col].shift(lag)
@@ -35,8 +35,8 @@ lag_features = [f'export_restored_lag{lag}' for lag in lag_periods]
 feature_columns = base_features + lag_features
 
 # 학습/테스트 데이터 분리
-train_data = all_data.loc[:'2024-12'].copy().dropna()
-test_data = all_data.loc['2025-01':'2025-03'].copy()
+train_data = all_data.loc[:'2024-09'].copy().dropna()
+test_data = all_data.loc['2024-10':'2025-03'].copy()
 
 X_train = train_data[feature_columns]
 y_train = train_data['export_restored']
@@ -87,7 +87,7 @@ results_df = pd.DataFrame({
 results_df['오차율(%)'] = ((results_df['실제 수출액'] - results_df['예측 수출액']) / results_df['실제 수출액']) * 100
 
 # 출력
-print("\n=== 2025년 1-3월 수출액 예측 결과 ===")
+print("\n=== 2024년 10월-2025년 3월 수출액 예측 결과 ===")
 pd.set_option('display.float_format', lambda x: '{:,.0f}'.format(x) if isinstance(x, (int, float)) and not isinstance(x, bool) else str(x))
 print("\n[단위: USD]")
 print("=" * 80)
@@ -102,26 +102,34 @@ print(f"평균 오차율: {results_df['오차율(%)'].mean():>16.2f}%")
 print("=" * 80)
 
 # 시각화
-plt.figure(figsize=(15, 10))
+plt.figure(figsize=(16, 8))  # 그래프 크기 좀 더 키움
 
-# 1. 실제 vs 예측
-plt.subplot(2, 1, 1)
-plt.plot(results_df['date'], results_df['실제 수출액'], label='실제값', marker='o')
-plt.plot(results_df['date'], results_df['예측 수출액'], label='예측값', marker='s')
+plt.plot(results_df['date'], results_df['실제 수출액'], label='실제값', marker='o', linewidth=2, markersize=10)
+plt.plot(results_df['date'], results_df['예측 수출액'], label='예측값', marker='s', linewidth=2, markersize=10)
+
+# 값 표시 (annotation) 글씨 크기 키움
 for idx, row in results_df.iterrows():
-    plt.annotate(f'{row["실제 수출액"]:,.0f}', xy=(row.name, row["실제 수출액"]),
-                 xytext=(0, 10), textcoords='offset points', ha='center', va='bottom')
-    plt.annotate(f'{row["예측 수출액"]:,.0f}', xy=(row.name, row["예측 수출액"]),
-                 xytext=(0, -15), textcoords='offset points', ha='center', va='top')
-plt.title('2025년 1-3월 수출액 예측 결과')
-plt.xlabel('날짜')
-plt.ylabel('수출액')
-plt.legend()
+    plt.annotate(f'{row["실제 수출액"]:,.0f}', xy=(row['date'], row["실제 수출액"]),
+                 xytext=(0, 12), textcoords='offset points', ha='center', va='bottom', fontsize=24, fontweight='bold')
+    plt.annotate(f'{row["예측 수출액"]:,.0f}', xy=(row['date'], row["예측 수출액"]),
+                 xytext=(0, -18), textcoords='offset points', ha='center', va='top', fontsize=24, fontweight='bold')
+
+plt.title('2024년 10월-2025년 3월 수출액 예측 결과 (정량+정성)', fontsize=24, fontweight='bold')
+
+plt.legend(fontsize=16)
 plt.grid(True)
 plt.margins(y=0.2)
+
+# x축 눈금 라벨 크기 및 각도 조절
 plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-plt.xticks(rotation=45)
+plt.xticks(rotation=45, fontsize=30)
+
+# y축 눈금 라벨 크기 조절
+plt.yticks(fontsize=14)
+
+plt.tight_layout()
+plt.show()
 
 # 2. 오차율
 plt.subplot(2, 1, 2)
