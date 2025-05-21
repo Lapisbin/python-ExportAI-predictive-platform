@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import lightgbm as lgb
+import matplotlib.patheffects as pe
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -101,34 +102,72 @@ for idx, row in results_df.iterrows():
 print(f"평균 오차율: {results_df['오차율(%)'].mean():>16.2f}%")
 print("=" * 80)
 
-# 시각화
-plt.figure(figsize=(16, 8))  # 그래프 크기 좀 더 키움
+# 그래프 시각화
+plt.figure(figsize=(9, 8))
+ax = plt.gca()
 
-plt.plot(results_df['date'], results_df['실제 수출액'], label='실제값', marker='o', linewidth=2, markersize=10)
-plt.plot(results_df['date'], results_df['예측 수출액'], label='예측값', marker='s', linewidth=2, markersize=10)
+# 실제값 라인 (그림자 효과)
+ax.plot(
+    results_df['date'], results_df['실제 수출액'],
+    label='실제값',
+    marker='o', linestyle='-', linewidth=4, markersize=8,
+    color='#003366', markerfacecolor='#003366', markeredgecolor='white',
+    path_effects=[pe.Stroke(linewidth=6, foreground='white', alpha=0.3), pe.Normal()]
+)
+# 예측값 라인 (그림자 효과)
+ax.plot(
+    results_df['date'], results_df['예측 수출액'],
+    label='예측값',
+    marker='s', linestyle='--', linewidth=4, markersize=12,
+    color='#FF9900', markerfacecolor='#FF9900', markeredgecolor='#003366', markeredgewidth=2, alpha=0.95,
+    path_effects=[pe.Stroke(linewidth=6, foreground='white', alpha=0.3), pe.Normal()]
+)
 
-# 값 표시 (annotation) 글씨 크기 키움
+# 값 표시 (그림자 효과)
 for idx, row in results_df.iterrows():
-    plt.annotate(f'{row["실제 수출액"]:,.0f}', xy=(row['date'], row["실제 수출액"]),
-                 xytext=(0, 12), textcoords='offset points', ha='center', va='bottom', fontsize=24, fontweight='bold')
-    plt.annotate(f'{row["예측 수출액"]:,.0f}', xy=(row['date'], row["예측 수출액"]),
-                 xytext=(0, -18), textcoords='offset points', ha='center', va='top', fontsize=24, fontweight='bold')
+    ax.annotate(
+        f'{row["실제 수출액"]:,.0f}', xy=(row['date'], row["실제 수출액"]),
+        xytext=(0, 12), textcoords='offset points',
+        ha='center', va='bottom', fontsize=19, fontweight='bold',
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2, alpha=1.0),
+        path_effects=[pe.withStroke(linewidth=3, foreground="white")]
+    )
+    ax.annotate(
+        f'{row["예측 수출액"]:,.0f}', xy=(row['date'], row["예측 수출액"]),
+        xytext=(0, -18), textcoords='offset points',
+        ha='center', va='top', fontsize=19, fontweight='bold',
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2, alpha=1.0),
+        path_effects=[pe.withStroke(linewidth=3, foreground="white")]
+    )
 
-plt.title('2024년 10월-2025년 3월 수출액 예측 결과 (정량+정성)', fontsize=24, fontweight='bold')
-
-plt.legend(fontsize=16)
-plt.grid(True)
-plt.margins(y=0.2)
-
-# x축 눈금 라벨 크기 및 각도 조절
-plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-plt.xticks(rotation=45, fontsize=30)
-
-# y축 눈금 라벨 크기 조절
+# 타이틀/축/범례
+plt.title(
+    '2024년 10월 ~ 2025년 3월\n수출량 예측 결과 (정량+정성 분석)',
+    fontsize=20, fontweight='bold', y=0.9
+)
+plt.xticks(fontsize=20, fontweight='bold')
 plt.yticks(fontsize=14)
+ax.tick_params(axis='x', pad=8)
+ax.tick_params(axis='y', pad=8)
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+plt.gca().spines['left'].set_color('#CCCCCC')
+plt.gca().spines['bottom'].set_color('#CCCCCC')
 
+# y축만 점선 그리드
+plt.grid(axis='y', linestyle='--', color='#CCCCCC', alpha=0.6)
+plt.grid(axis='x', visible=False)
+
+# 범례 스타일
+plt.legend(
+    fontsize=14, loc='upper left',
+    frameon=True, facecolor='white', edgecolor='#CCCCCC',
+    fancybox=True, framealpha=1.0
+)
+
+plt.margins(y=0.8)
 plt.tight_layout()
+plt.savefig('export_plot.png', transparent=True, dpi=300)
 plt.show()
 
 # 2. 오차율
